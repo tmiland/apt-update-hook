@@ -11,7 +11,7 @@
 ####                   Maintained by @tmiland                     ####
 ######################################################################
 
-VERSION='1.0.0'
+VERSION='1.0.1'
 
 #------------------------------------------------------------------------------#
 #
@@ -81,8 +81,9 @@ fi
 
 if [[ -n "$LAST_CMD" ]] && [[ "$LAST_CMD" == "apt update" ]]
 then
-  got_upgrades=$(apt list --upgradable 2>/dev/null)
+  got_upgrades=$(apt list --upgradable 2>/dev/null | sed "s|Listing...||g")
   if [ -n "$got_upgrades" ]; then
+    echo
     ok "Updates are available"
     echo "$got_upgrades"
     read -rp "Do you want to upgrade? [y/n] " q
