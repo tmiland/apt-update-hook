@@ -38,25 +38,44 @@ VERSION='1.0.1'
 # SOFTWARE.
 #
 #------------------------------------------------------------------------------#
-# ANSI Colors
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-RED='\033[0;31m'
-RESET='\033[0m'    # Reset color
+# scolors - Color constants
+# canonical source http://github.com/swelljoe/scolors
+
+# do we have tput?
+if which 'tput' > /dev/null; then
+  # do we have a terminal?
+  if [ -t 1 ]; then
+    # does the terminal have colors?
+    ncolors=$(tput colors)
+    if [ "$ncolors" -ge 8 ]; then
+      RED=$(tput setaf 1)
+      GREEN=$(tput setaf 2)
+      YELLOW=$(tput setaf 3)
+      CYAN=$(tput setaf 6)
+      NORMAL=$(tput sgr0)
+    fi
+  fi
+else
+  echo "tput not found, colorized output disabled."
+  GREEN=''
+  YELLOW=''
+  CYAN=''
+  NORMAL=''
+fi
 
 # Print an error message and exit (Red)
 error() {
-  printf "${RED}ERROR: %s${RESET}\n" "$*" >&2
+  printf "${RED}ERROR: %s${NORMAL}\n" "$*" >&2
   exit 1
 }
 
 # Print a log message (Green)
 ok() {
-  printf "${GREEN}%s${RESET}\n" "$*"
+  printf "${GREEN}%s${NORMAL}\n" "$*"
 }
 
 warn() {
-  printf "${YELLOW}%s${RESET}\n" "$*"
+  printf "${YELLOW}%s${NORMAL}\n" "$*"
 }
 
 # https://gist.github.com/imthenachoman/f722f6d08dfb404fed2a3b2d83263118
@@ -85,8 +104,16 @@ then
   if [ -n "$got_upgrades" ]; then
     echo
     ok "Updates are available"
-    echo "$got_upgrades"
-    read -rp "Do you want to upgrade? [y/n] " q
+    echo
+    echo "$got_upgrades" | sed '/^[[:space:]]*$/d' | while read -r line
+    do
+      line1=$(echo "$line" | cut -d '/' -f1)
+      line2=$(echo "$line" | cut -d '/' -f2)
+      got_upgrades="${GREEN}${line1}${NORMAL}/${line2}"
+      echo "$got_upgrades"
+    done
+    echo
+    read -rp "${YELLOW}Do you want to upgrade?${NORMAL} [y/n] " q
     if [ "$q" == "y" ]; then
       sudo apt upgrade || error "Something went wrong..."
     fi
